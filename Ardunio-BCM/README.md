@@ -1,4 +1,4 @@
-# BCM Remote Command Receiver — README
+# BCM Remote Command Receiver
 
 ## Overview
 

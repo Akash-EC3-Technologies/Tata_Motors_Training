@@ -89,7 +89,7 @@ void setup() {
   pinMode(CAN0_INT, INPUT_PULLUP);
   pinMode(DOOR_STATUS_LED, OUTPUT);
 
-  if (CAN0.begin(MCP_STDEXT, CAN_125KBPS, MCP_8MHZ) == CAN_OK) {
+  if (CAN0.begin(MCP_ANY, CAN_125KBPS, MCP_8MHZ) == CAN_OK) {
     Serial.println(F("MCP2515 Initialized Successfully"));
   } else {
     Serial.println(F("Error Initializing MCP2515"));
