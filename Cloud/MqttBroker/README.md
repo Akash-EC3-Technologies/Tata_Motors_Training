@@ -2,62 +2,6 @@
 
 This guide sets up an **Eclipse Mosquitto** MQTT broker in Docker using Docker Compose
 
-## Prerequisites
-
-### Install Docker + Docker Compose
-
-#### 1. Update your system
-
-```bash
-sudo apt update && sudo apt full-upgrade -y
-sudo reboot
-```
-
-#### 2. Install Docker Engine
-
-```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-```
-
-This will:
-
-* Install `docker-ce`, `docker-ce-cli`, and `containerd`
-* Enable and start the Docker service
-* Configure systemd startup
-
-#### 3. Add your user to the docker group
-
-```bash
-sudo usermod -aG docker $USER
-sudo reboot
-```
-
-Test it:
-
-```bash
-docker run hello-world
-```
-
-#### 4. Enable Docker to start on boot
-
-```bash
-sudo systemctl enable docker
-```
-
-
-#### 5. Install Docker Compose plugin
-
-```bash
-sudo apt install docker-compose-plugin -y
-```
-
-Check it:
-
-```bash
-docker compose version
-```
-
 ## 1. Project layout
 
 ```bash
@@ -106,7 +50,7 @@ SANs must match how your clients connect. To connect using IP,  add `IP.1` as yo
 ### 2.2 Create a local CA
 
 ```bash
-# Private CA (10-year validity)
+# Private CA
 openssl genrsa -out mosquitto/certs/ca.key 4096
 openssl req -x509 -new -key mosquitto/certs/ca.key -sha256 -days 3650 \
   -subj "/CN=MosquittoMQTT-Local-CA" -out mosquitto/certs/ca.crt
@@ -125,7 +69,7 @@ openssl genrsa -out mosquitto/certs/server.key 2048
 openssl req -new -key mosquitto/certs/server.key \
   -config mosquitto/certs/san.cnf -out mosquitto/certs/server.csr
 
-# Issue server certificate (valid ~2.25 years)
+# Issue server certificate
 openssl x509 -req -in mosquitto/certs/server.csr \
   -CA mosquitto/certs/ca.crt -CAkey mosquitto/certs/ca.key -CAcreateserial \
   -out mosquitto/certs/server.crt -days 825 -sha256 \
@@ -164,8 +108,6 @@ openssl pkcs12 -export -clcerts \
   -out mosquitto/certs/client1.p12 -name "client1"
 ```
 
----
-
 ## 3. Mosquitto configuration (TLS + mTLS)
 
 Create `mosquitto/config/mosquitto.conf`:
@@ -183,7 +125,7 @@ keyfile  /mosquitto/certs/server.key
 cafile /mosquitto/certs/ca.crt
 require_certificate true
 
-# Treat client certificate CN as username (useful for ACLs)
+# Treat client certificate CN as username (needed for ACLs)
 use_identity_as_username true
 
 # (Optional) Add password/ACLs in addition to mTLS
@@ -233,6 +175,7 @@ Test useing the **Mosquitto image as a client**. It includes `mosquitto_pub`/`mo
 
 ```bash
 docker run --rm -it \
+  --network host \
   -v "$PWD/mosquitto/certs:/certs" \
   eclipse-mosquitto:2 \
   mosquitto_sub -h YOUR_DOMAIN_OR_IP -p 8883 \
@@ -246,13 +189,14 @@ docker run --rm -it \
 
 ```bash
 docker run --rm -it \
+  --network host \
   -v "$PWD/mosquitto/certs:/certs" \
   eclipse-mosquitto:2 \
   mosquitto_pub -h YOUR_DOMAIN_OR_IP -p 8883 \
-    --cafile /certs/ca.crt \
-    --cert /certs/client1.crt \
-    --key  /certs/client1.key \
-    -t 'test/topic' -m 'hello over mTLS' -d
+  --cafile /certs/ca.crt \
+  --cert /certs/client1.crt \
+  --key  /certs/client1.key \
+  -t 'test/topic' -m 'hello over mTLS' -d
 ```
 
 You should see the subscriber receive the message.

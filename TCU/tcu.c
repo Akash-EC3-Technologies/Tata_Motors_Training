@@ -1,15 +1,3 @@
-// Build: gcc mqtt_can_bridge.c -o mqtt_can_bridge -lmosquitto
-// Usage example:
-//   sudo ./mqtt_can_bridge \
-//     --host broker.local --port 8883 \
-//     --cafile /etc/ssl/certs/ca.crt \
-//     --cert /etc/ssl/certs/client.crt \
-//     --key /etc/ssl/private/client.key \
-//     --canif can0
-//
-// Before running, bring up SocketCAN, e.g.:
-//   sudo ip link set can0 up type can bitrate 125000
-
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,7 +137,7 @@ int main(int argc, char **argv) {
     const char *certfile = NULL;
     const char *keyfile = NULL;
 
-    // Parse very simple flags
+    // Parse cmdline flags
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--host") && i+1 < argc) host = argv[++i];
         else if (!strcmp(argv[i], "--port") && i+1 < argc) port = atoi(argv[++i]);
