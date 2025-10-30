@@ -1,0 +1,28 @@
+services:
+  digital-twin:
+    image: digital-twin
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MQTT_HOST: 10.150.192.133
+      MQTT_PORT: "8883"
+      MQTT_TOPIC: status/door
+      MQTT_CA_CERT: /certs/ca.crt
+      MQTT_CLIENT_CERT: /certs/digitaltwin.crt
+      MQTT_CLIENT_KEY: /certs/digitaltwin.key
+      # Optional:
+      MQTT_CLIENT_ID: digital-twin
+      TLS_INSECURE: "false"
+      MQTT_QOS: "1"
+      MQTT_RETAIN: "false"
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "8000"
+    volumes:
+      - ./certs:/certs:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 15s
+      retries: 3
